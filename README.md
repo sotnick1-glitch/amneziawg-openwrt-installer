@@ -21,7 +21,7 @@ You can also skip step 3 and import the same `.conf` into the official AmneziaWG
 Requirements: a fresh Ubuntu (or Debian) VPS you control, root access.
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/<your-username>/amneziawg-openwrt-installer/main/install-server.sh | bash
+curl -fsSL https://raw.githubusercontent.com/sotnick1-glitch/amneziawg-openwrt-installer/main/install-server.sh | bash
 ```
 
 It will:
@@ -38,7 +38,7 @@ Run it again any time to add another client — it detects the server is already
 Requirements: an OpenWrt router whose build carries (or can install) `kmod-amneziawg`, `amneziawg-tools`, and `luci-proto-amneziawg`. Not every OpenWrt target has these in its feed — see [amnezia-vpn/amneziawg-openwrt](https://github.com/amnezia-vpn/amneziawg-openwrt) if `opkg install` fails.
 
 ```sh
-wget -O- https://raw.githubusercontent.com/<your-username>/amneziawg-openwrt-installer/main/install-router.sh | sh
+wget -O- https://raw.githubusercontent.com/sotnick1-glitch/amneziawg-openwrt-installer/main/install-router.sh | sh
 ```
 
 Paste the client `.conf` (from `install-server.sh`, or from anywhere else) when prompted, then Enter + Ctrl-D.
@@ -78,7 +78,7 @@ MIT
 Нужно: чистый VPS на Ubuntu (или Debian), доступ root.
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/<your-username>/amneziawg-openwrt-installer/main/install-server.sh | bash
+curl -fsSL https://raw.githubusercontent.com/sotnick1-glitch/amneziawg-openwrt-installer/main/install-server.sh | bash
 ```
 
 Скрипт сам:
@@ -95,7 +95,7 @@ curl -fsSL https://raw.githubusercontent.com/<your-username>/amneziawg-openwrt-i
 Нужно: роутер на OpenWrt, в прошивке которого есть (или можно поставить) `kmod-amneziawg`, `amneziawg-tools`, `luci-proto-amneziawg`. Есть не во всех сборках/платформах — если `opkg install` не находит пакеты, смотрите [amnezia-vpn/amneziawg-openwrt](https://github.com/amnezia-vpn/amneziawg-openwrt).
 
 ```sh
-wget -O- https://raw.githubusercontent.com/<your-username>/amneziawg-openwrt-installer/main/install-router.sh | sh
+wget -O- https://raw.githubusercontent.com/sotnick1-glitch/amneziawg-openwrt-installer/main/install-router.sh | sh
 ```
 
 Когда попросит — вставьте клиентский `.conf` (от `install-server.sh`, или откуда угодно ещё), нажмите Enter и Ctrl-D.

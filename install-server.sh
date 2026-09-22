@@ -1,12 +1,12 @@
 #!/bin/bash
 # AmneziaWG one-command server installer (Ubuntu/Debian)
-# https://github.com/<your-username>/amneziawg-server-installer
+# https://github.com/sotnick1-glitch/amneziawg-server-installer
 #
 # What this does:
 #   - Installs the AmneziaWG kernel module + tools on your own VPS
 #   - Sets up a server interface with random obfuscation parameters
 #   - Generates a client, and prints/saves a ready-to-use client .conf
-#     (feed that .conf into https://github.com/<your-username>/amneziawg-openwrt-installer
+#     (feed that .conf into https://github.com/sotnick1-glitch/amneziawg-openwrt-installer
 #      or any AmneziaWG-compatible app: AmneziaWG, AmneziaVPN, DefaultVPN, WG Tunnel...)
 #
 # This script is generic: it does not contain any pre-set server, keys,
@@ -14,7 +14,7 @@
 # you run it.
 #
 # Usage (as root):
-#   curl -fsSL https://raw.githubusercontent.com/<your-username>/amneziawg-server-installer/main/install-server.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/sotnick1-glitch/amneziawg-server-installer/main/install-server.sh | bash
 
 set -e
 

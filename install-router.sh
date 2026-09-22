@@ -1,6 +1,6 @@
 #!/bin/sh
 # AmneziaWG one-command installer for OpenWrt
-# https://github.com/<your-username>/amneziawg-openwrt-installer
+# https://github.com/sotnick1-glitch/amneziawg-openwrt-installer
 #
 # What this does:
 #   - Installs AmneziaWG kernel module + tools (if not already present)
