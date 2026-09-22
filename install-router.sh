@@ -131,9 +131,133 @@ fi
 # --- 5. Bring the interface up (off by default, safe) -----------------------
 ifup "$IFACE" >/dev/null 2>&1 || true
 
-# --- 6. Install the toggle page ---------------------------------------------
-echo "--> Installing on/off toggle page..."
-cat > "$CGI_PATH" << CGISCRIPT
+# --- 6. Detect an existing Podkop selective-routing setup --------------------
+# If Podkop (https://github.com/itdoginfo/podkop) is already managing a
+# domain-list-based proxy section, we can offer a "selective" mode that
+# re-points that same section at our awg0 interface instead of its proxy,
+# reusing its existing domain/subnet lists. If Podkop isn't present, we
+# only offer a plain on/off (full-tunnel) toggle.
+PODKOP_SECTION=""
+if [ -f /etc/config/podkop ]; then
+	PODKOP_SECTION=$(uci show podkop 2>/dev/null | sed -n "s/^podkop\.\([^.]*\)\.connection_type='proxy'.*/\1/p" | head -1)
+fi
+
+# --- 7. Install the toggle page ---------------------------------------------
+echo "--> Installing toggle page..."
+if [ -n "$PODKOP_SECTION" ]; then
+	echo "    Found Podkop section '$PODKOP_SECTION' — enabling selective mode."
+	cat > "$CGI_PATH" << CGISCRIPT
+#!/bin/sh
+echo 'Content-Type: text/html; charset=utf-8'
+echo ''
+IFACE='$IFACE'
+PK='$PODKOP_SECTION'
+
+restore_default_route() {
+	ifup wan >/dev/null 2>&1 || true
+	sleep 3
+	if [ -z "\$(ip route show default)" ]; then
+		GW=\$(ip route show dev pppoe-wan 2>/dev/null | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+		[ -n "\$GW" ] && ip route add default via "\$GW" dev pppoe-wan 2>/dev/null
+	fi
+}
+
+if [ "\$REQUEST_METHOD" = 'POST' ]; then
+	read -r POSTDATA
+	case "\$POSTDATA" in
+		*mode=full*)
+			/etc/init.d/podkop stop >/dev/null 2>&1
+			uci set network.\${IFACE}_peer.route_allowed_ips='1'
+			uci commit network
+			ifdown "\$IFACE" >/dev/null 2>&1
+			ifup "\$IFACE" >/dev/null 2>&1
+			;;
+		*mode=selective*)
+			uci set network.\${IFACE}_peer.route_allowed_ips='0'
+			uci commit network
+			ifdown "\$IFACE" >/dev/null 2>&1
+			ifup "\$IFACE" >/dev/null 2>&1
+			restore_default_route
+			uci set podkop.\$PK.connection_type='vpn'
+			uci set podkop.\$PK.interface="\$IFACE"
+			uci set podkop.\$PK.domain_resolver_enabled='1'
+			uci set podkop.\$PK.domain_resolver_dns_type='udp'
+			uci set podkop.\$PK.domain_resolver_dns_server='1.1.1.1'
+			uci commit podkop
+			/etc/init.d/podkop restart >/dev/null 2>&1
+			;;
+		*mode=off*)
+			uci set network.\${IFACE}_peer.route_allowed_ips='0'
+			uci commit network
+			ifdown "\$IFACE" >/dev/null 2>&1
+			ifup "\$IFACE" >/dev/null 2>&1
+			restore_default_route
+			uci set podkop.\$PK.connection_type='proxy'
+			uci commit podkop
+			/etc/init.d/podkop restart >/dev/null 2>&1
+			;;
+	esac
+	sleep 2
+fi
+
+DEFROUTE=\$(ip route show default | grep -c "\$IFACE")
+NODEFROUTE=\$(ip route show default | wc -l)
+CTYPE=\$(uci -q get podkop.\$PK.connection_type)
+HANDSHAKE=\$(awg show "\$IFACE" latest-handshakes 2>/dev/null | awk '{print \$2}')
+NOW=\$(date +%s)
+
+if [ "\$DEFROUTE" -gt 0 ] 2>/dev/null; then
+	CURRENT='full'
+	STATUS='<span style="color:#2ecc71">FULL TUNNEL via AmneziaWG</span>'
+elif [ "\$CTYPE" = 'vpn' ]; then
+	CURRENT='selective'
+	STATUS='<span style="color:#3498db">SELECTIVE: the Podkop list routes via AmneziaWG, everything else direct</span>'
+else
+	CURRENT='off'
+	STATUS='<span style="color:#888">OFF — Podkop using its normal proxy</span>'
+fi
+
+if [ "\$NODEFROUTE" -eq 0 ] 2>/dev/null; then
+	NETWARN='<p style="color:#e74c3c">WARNING: no default route at all. Reload this page.</p>'
+else
+	NETWARN=''
+fi
+
+if [ -n "\$HANDSHAKE" ] && [ "\$HANDSHAKE" != '0' ]; then
+	HS_INFO="AmneziaWG handshake: \$((NOW - HANDSHAKE))s ago"
+else
+	HS_INFO='AmneziaWG: no active handshake'
+fi
+
+mkradio() {
+	CHECKED=''
+	[ "\$CURRENT" = "\$1" ] && CHECKED='checked'
+	echo "<label class='opt'><input type='radio' name='mode' value='\$1' \$CHECKED> \$2</label>"
+}
+
+cat << HTML
+<!DOCTYPE html><html><head><meta charset='utf-8'><title>AmneziaWG</title>
+<style>
+body{font-family:sans-serif;background:#1a1a1a;color:#eee;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+.card{background:#262626;padding:40px;border-radius:12px;text-align:center;min-width:360px}
+.opt{display:block;text-align:left;background:#333;padding:12px 16px;border-radius:8px;margin:10px 0;cursor:pointer}
+.opt input{margin-right:10px}
+button{font-size:16px;padding:12px 24px;border:none;border-radius:6px;color:white;cursor:pointer;margin-top:16px;background:#2ecc71}
+.small{color:#888;font-size:13px;margin-top:10px}
+</style></head><body><div class='card'>
+<h2>AmneziaWG</h2><p>\$STATUS</p><p class='small'>\$HS_INFO</p>\$NETWARN
+<form method='post'>
+\$(mkradio off 'Off — Podkop uses its normal proxy')
+\$(mkradio selective "Selective — Podkop's list via AmneziaWG")
+\$(mkradio full 'Full tunnel via AmneziaWG')
+<button type='submit'>Apply</button>
+</form>
+<p class='small'><a href='/cgi-bin/amnezia' style='color:#666'>Refresh</a></p>
+</div></body></html>
+HTML
+CGISCRIPT
+else
+	cat > "$CGI_PATH" << CGISCRIPT
 #!/bin/sh
 echo 'Content-Type: text/html; charset=utf-8'
 echo ''
@@ -153,7 +277,6 @@ if [ "\$REQUEST_METHOD" = 'POST' ]; then
 			uci commit network
 			ifdown "\$IFACE" >/dev/null 2>&1
 			ifup "\$IFACE" >/dev/null 2>&1
-			for wanif in \$(uci -q get network.wan.device 2>/dev/null); do :; done
 			ifup wan >/dev/null 2>&1 || true
 			sleep 3
 			if [ -z "\$(ip route show default)" ]; then
@@ -204,6 +327,7 @@ button{font-size:16px;padding:12px 24px;border:none;border-radius:6px;color:whit
 </div></body></html>
 HTML
 CGISCRIPT
+fi
 chmod +x "$CGI_PATH"
 
 mkdir -p "$(dirname "$VIEW_PATH")"

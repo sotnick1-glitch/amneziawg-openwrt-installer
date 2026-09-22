@@ -46,10 +46,22 @@ Paste the client `.conf` (from `install-server.sh`, or from anywhere else) when 
 It will:
 - Install AmneziaWG packages if missing.
 - Create the `awg0` interface and firewall NAT rule from your pasted config.
-- Install a simple on/off toggle page inside LuCI (**Services → AmneziaWG**), or directly at `http://<router-ip>/cgi-bin/amnezia`.
-- Leave the tunnel **off by default** — nothing routes through it until you press the button.
+- Install a toggle page inside LuCI (**Services → AmneziaWG**), or directly at `http://<router-ip>/cgi-bin/amnezia`.
+- Leave the tunnel **off by default** — nothing routes through it until you choose a mode.
 
-Safe to re-run: it only touches the `awg0` interface it creates and the firewall zone that already has masquerading enabled — your existing WAN, LAN, and other VPN/proxy setups (Podkop, OpenClash, etc.) are left alone. If you ever lose internet after toggling, reload the LuCI page — the toggle has a built-in fallback that restores your normal default route.
+### Two modes, or three if you already run Podkop
+
+If you don't have [Podkop](https://github.com/itdoginfo/podkop) installed, the toggle page is a plain on/off switch: **off** (normal routing) or **full tunnel** (everything via AmneziaWG).
+
+If the installer detects an existing Podkop selective-routing section (the one with its own domain/subnet list — Telegram, YouTube, etc.), it adds a third option:
+
+- **Off** — Podkop routes its list through its own proxy (e.g. Hysteria2/VLESS), as before.
+- **Selective** — the *same* Podkop domain/subnet list is instead routed through AmneziaWG, everything else goes direct. Nothing about the list itself changes, only which tunnel carries it.
+- **Full tunnel** — Podkop is stopped, and *all* traffic goes through AmneziaWG.
+
+This is useful when your Podkop proxy protocol gets blocked on some networks but AmneziaWG still gets through (or vice versa) — flip the mode instead of reconfiguring anything.
+
+Safe to re-run: it only touches the `awg0` interface it creates, the firewall zone that already has masquerading enabled, and (in selective mode) the `connection_type`/`interface` fields of your existing Podkop section — your existing WAN, LAN, and Podkop's own domain lists are left alone. If you ever lose internet after toggling, reload the LuCI page — the toggle has a built-in fallback that restores your normal default route.
 
 ## License
 
@@ -103,10 +115,22 @@ wget -O- https://raw.githubusercontent.com/sotnick1-glitch/amneziawg-openwrt-ins
 Скрипт сам:
 - Поставит пакеты AmneziaWG, если их нет.
 - Создаст интерфейс `awg0` и правило NAT в firewall из вставленного конфига.
-- Установит простую кнопку вкл/выкл прямо в LuCI (**Services → AmneziaWG**), либо напрямую по адресу `http://<router-ip>/cgi-bin/amnezia`.
-- Оставит туннель **выключенным по умолчанию** — ничего не маршрутизируется через него, пока не нажмёте кнопку.
+- Установит страницу-переключатель прямо в LuCI (**Services → AmneziaWG**), либо напрямую по адресу `http://<router-ip>/cgi-bin/amnezia`.
+- Оставит туннель **выключенным по умолчанию** — ничего не маршрутизируется через него, пока вы не выберете режим.
 
-Можно запускать повторно — трогает только созданный им интерфейс `awg0` и firewall-зону с уже включённым masquerading, остальное (WAN, LAN, Podkop, OpenClash и т.п.) не затрагивается. Если после переключения пропал интернет — обновите страницу LuCI, в кнопке есть встроенная защита, которая сама восстанавливает обычный маршрут.
+### Два режима, а если у вас уже стоит Podkop — три
+
+Если [Podkop](https://github.com/itdoginfo/podkop) не установлен, переключатель простой: **выключено** (обычная маршрутизация) или **весь трафик** (всё через AmneziaWG).
+
+Если установщик находит у вас уже настроенную секцию выборочной маршрутизации Podkop (ту, где свой список доменов/подсетей — Telegram, YouTube и т.д.), добавляется третий вариант:
+
+- **Выключено** — список Podkop идёт через его обычный прокси (например Hysteria2/VLESS), как и было.
+- **Выборочно** — **тот же самый** список доменов/подсетей Podkop вместо прокси идёт через AmneziaWG, всё остальное — напрямую. Сам список не меняется, меняется только то, какой туннель его несёт.
+- **Весь трафик** — Podkop останавливается, и **всё** идёт через AmneziaWG.
+
+Это полезно, когда протокол вашего Podkop-прокси где-то блокируется, а AmneziaWG всё ещё пробивает (или наоборот) — просто переключаете режим, ничего не перенастраивая заново.
+
+Можно запускать повторно — трогает только созданный им интерфейс `awg0`, firewall-зону с уже включённым masquerading, и (в режиме «Выборочно») поля `connection_type`/`interface` вашей существующей секции Podkop — сами списки доменов Podkop, WAN и LAN не затрагиваются. Если после переключения пропал интернет — обновите страницу LuCI, в переключателе есть встроенная защита, которая сама восстанавливает обычный маршрут.
 
 ## Лицензия
 
