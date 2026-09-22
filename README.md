@@ -12,7 +12,7 @@ Two one-command scripts that set up [AmneziaWG](https://amnezia.org) end-to-end:
 
 Done — your router now has a one-button AmneziaWG toggle inside LuCI.
 
-You can also skip step 3 and import the same `.conf` into the official AmneziaWG / AmneziaVPN app on a phone or laptop instead.
+Don't have a router, or don't want to touch it? Skip step 3 entirely — see [Installing on a phone or computer](#installing-on-a-phone-or-computer-no-router-needed) below, it's just an app + the same `.conf` file.
 
 ---
 
@@ -32,6 +32,33 @@ It will:
 - Ask for a client name, generate a client keypair, and print + save a client `.conf` file.
 
 Run it again any time to add another client — it detects the server is already set up and only adds a new peer.
+
+## Installing on a phone or computer (no router needed)
+
+No script needed here — just an app and the `.conf` file `install-server.sh` gave you. This covers a single device, not your whole home network; if you want everything on your Wi-Fi protected at once without installing anything per-device, that's what `install-router.sh` is for.
+
+**iOS / macOS**
+1. Install **AmneziaWG** from the App Store (a lighter, dedicated client) — or **AmneziaVPN** if you also want a bundled VPN-management UI.
+2. Open the app → **Add tunnel from file or archive** (or scan a QR code, if you generated one from the `.conf`).
+3. Select your `.conf` file.
+4. Flip the toggle to connect.
+
+**Android**
+1. Install **AmneziaWG** or **AmneziaVPN** from Google Play (or **WG Tunnel**, a third-party client that also supports AmneziaWG).
+2. Import the `.conf` the same way — from file, or by scanning a QR code.
+3. Connect.
+
+**Windows**
+1. Download the official client from [amnezia-vpn/amneziawg-windows-client](https://github.com/amnezia-vpn/amneziawg-windows-client/releases/latest).
+2. Import the `.conf` file.
+3. Activate.
+
+**Linux**
+Use `awg-quick` from `amneziawg-tools` (same package family as the router installer) with the `.conf` file directly: `awg-quick up ./client.conf`.
+
+**Turning a `.conf` into a QR code**, if your VPS doesn't have a desktop to view it on: `install-server.sh` prints the file to your terminal — copy it to a machine with `qrencode` installed and run `qrencode -o client-qr.png -r client.conf`, then open the PNG and scan it with the app.
+
+---
 
 ## `install-router.sh` — sets up an OpenWrt router
 
@@ -81,7 +108,7 @@ MIT
 
 Готово — на роутере появляется кнопка включения/выключения AmneziaWG прямо в LuCI.
 
-Шаг 3 можно пропустить и вместо этого импортировать тот же `.conf` в официальное приложение AmneziaWG / AmneziaVPN на телефоне или ноутбуке.
+Нет роутера, или не хотите его трогать? Пропустите шаг 3 полностью — смотрите [«Установка на телефон или компьютер»](#установка-на-телефон-или-компьютер-без-роутера) ниже, это просто приложение + тот же `.conf`-файл.
 
 ---
 
@@ -101,6 +128,33 @@ curl -fsSL https://raw.githubusercontent.com/sotnick1-glitch/amneziawg-openwrt-i
 - Спросит имя клиента, сгенерирует его ключ и выведет + сохранит клиентский `.conf`.
 
 Можно запускать повторно, чтобы добавить ещё одного клиента — скрипт увидит, что сервер уже настроен, и просто добавит нового пира.
+
+## Установка на телефон или компьютер (без роутера)
+
+Скрипт тут не нужен — только приложение и `.conf`-файл, который выдал `install-server.sh`. Это закрывает одно устройство, а не всю домашнюю сеть; если хотите защитить сразу весь Wi-Fi без установки на каждое устройство — для этого `install-router.sh`.
+
+**iOS / macOS**
+1. Установите **AmneziaWG** из App Store (лёгкое специализированное приложение) — или **AmneziaVPN**, если нужен ещё и встроенный интерфейс управления VPN.
+2. В приложении: **Импортировать туннель из файла** (или отсканируйте QR-код, если сделали его из `.conf`).
+3. Выберите ваш `.conf`-файл.
+4. Включите переключатель — готово.
+
+**Android**
+1. Установите **AmneziaWG** или **AmneziaVPN** из Google Play (либо **WG Tunnel** — сторонний клиент, тоже понимающий AmneziaWG).
+2. Импортируйте `.conf` так же — файлом или через QR-код.
+3. Подключитесь.
+
+**Windows**
+1. Скачайте официальный клиент: [amnezia-vpn/amneziawg-windows-client](https://github.com/amnezia-vpn/amneziawg-windows-client/releases/latest).
+2. Импортируйте `.conf`-файл.
+3. Активируйте.
+
+**Linux**
+Используйте `awg-quick` из пакета `amneziawg-tools` (та же семья пакетов, что и в установщике роутера) прямо с `.conf`-файлом: `awg-quick up ./client.conf`.
+
+**Как сделать QR-код из `.conf`**, если на VPS нет рабочего стола, чтобы его посмотреть: `install-server.sh` выводит содержимое файла в терминал — скопируйте его на машину, где стоит `qrencode`, и выполните `qrencode -o client-qr.png -r client.conf`, затем откройте PNG и отсканируйте его приложением.
+
+---
 
 ## `install-router.sh` — настройка роутера на OpenWrt
 
