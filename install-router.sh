@@ -214,7 +214,12 @@ elif [ "\$CTYPE" = 'vpn' ]; then
 	STATUS='<span style="color:#3498db">SELECTIVE: the Podkop list routes via AmneziaWG, everything else direct</span>'
 else
 	CURRENT='off'
-	STATUS='<span style="color:#888">OFF — Podkop using its normal proxy</span>'
+	PROXY_TYPE=\$(uci -q get podkop.\$PK.proxy_config_type)
+	if [ "\$PROXY_TYPE" = 'url' ]; then
+		PROXY_LABEL=\$(uci -q get podkop.\$PK.proxy_string | cut -d: -f1)
+	fi
+	[ -z "\$PROXY_LABEL" ] && PROXY_LABEL='its normal proxy'
+	STATUS="<span style=\"color:#888\">OFF — Podkop using \$PROXY_LABEL</span>"
 fi
 
 if [ "\$NODEFROUTE" -eq 0 ] 2>/dev/null; then
